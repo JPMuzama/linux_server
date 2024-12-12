@@ -1,0 +1,90 @@
+Step 1: Install Postfix
+In the first step install Postfix on your Ubuntu system. You can do this by running following command −
+
+sudo apt-get install postfix
+
+
+During installation, you will be prompted to select mail server configuration and there options. You should choose "Internet Site" and fill your server's domain name when ask.
+
+Step 2: Configure Postfix
+Once Postfix is installed, you need to configure it to use Gmail as a relay for all emails. Open the main Postfix configuration file by using the following command −
+
+sudo nano /etc/postfix/main.cf
+
+Add the following lines to the end of the file −
+'''
+relayhost = [smtp.gmail.com]:587
+smtp_use_tls = yes
+smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+smtp_sasl_security_options = noanonymous
+Save and exit the file.
+'''
+
+
+Step 3: Create a Gmail App Password
+To use Gmail as a relay server, you need to create an App Password in Gmail configuration. This password is use to authenticate Gmail's servers for relaing emails. To create an App Password, you can follow these steps −
+
+Log in to your Gmail account.
+
+Go to your Google Account settings page.
+
+Click on "Security".
+
+Under "Signing in to Google", click on "App Passwords".
+
+Select "Mail" as the app and "Other (Custom Name)" as the device.
+
+Enter a name for the password and click on "Generate".
+
+Make a note of the password that is generated.
+
+Step 4: Add Gmail Credentials in Postfix
+Now that you have created an App Password, you need to add it to Postfix. Create a new file called "sasl_passwd" in the /etc/postfix directory by running the following command −
+
+
+sudo nano /etc/postfix/sasl_passwd
+
+
+
+
+Add the following line to the file, replacing "your-email@gmail.com" with your Gmail address and "your-password" with the App Password that you generated −
+
+
+
+
+ [smtp.gmail.com]:587 your-email@gmail.com:your-password
+
+
+
+
+Save and exit the file.
+
+Now, use following command to hash the sasl_passwd file −
+
+
+
+
+
+sudo postmap /etc/postfix/sasl_passwd
+
+
+
+Step 5: Restart Postfix
+Now restart Postfix service to apply the changes by using following command −
+
+
+
+sudo systemctl restart postfix
+
+
+
+Step 6: Test the Configuration
+To test configuration, send an email using the "mail" commans, and replace "recipient@email.com" with the email address you want to send the email to −
+
+
+echo "Test email" | mail -s "Test subject" recipient@email.com
+
+
+
+If everything is configured correctly, the email should be sent and received by the recipient.

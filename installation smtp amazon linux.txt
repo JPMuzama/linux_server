@@ -1,0 +1,172 @@
+Voici un tutoriel adapté pour configurer **Postfix avec Gmail sur Amazon Linux 2**, en suivant les étapes similaires à celles du tutoriel Ubuntu, mais avec les commandes et les ajustements spécifiques pour **Amazon Linux 2**.
+
+### Étapes pour configurer **Postfix avec Gmail** sur **Amazon Linux 2** :
+
+---
+
+### Étape 1 : Installer Postfix et les dépendances
+
+1. **Mettre à jour le système** :
+
+   ```bash
+   sudo yum update -y
+   ```
+
+2. **Installer Postfix et les dépendances** :
+
+   ```bash
+   sudo yum install postfix cyrus-sasl cyrus-sasl-plain -y
+   ```
+
+   - **Postfix** : Serveur de messagerie pour envoyer des e-mails.
+   - **cyrus-sasl** : Fournit des modules pour l'authentification.
+   - **cyrus-sasl-plain** : Module permettant une authentification simple avec des mots de passe en texte clair.
+
+---
+
+### Étape 2 : Configurer Postfix pour utiliser Gmail comme relais SMTP
+
+1. **Éditer la configuration de Postfix** :
+
+   Ouvrez le fichier de configuration principal de Postfix avec un éditeur de texte :
+
+   ```bash
+   sudo vi /etc/postfix/main.cf
+   ```
+
+2. **Ajouter les lignes suivantes à `main.cf`** :
+
+   Ajoutez ou modifiez ces lignes pour configurer Gmail comme relais SMTP :
+
+   ```bash
+   # Relais SMTP pour Gmail
+   relayhost = [smtp.gmail.com]:587
+
+   # Authentification avec Gmail
+   smtp_sasl_auth_enable = yes
+   smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+   smtp_sasl_security_options = noanonymous
+
+   # TLS pour sécuriser la connexion
+   smtp_use_tls = yes
+   tls_smtp_secure_cert_match = may
+   ```
+
+3. **Enregistrer et fermer le fichier**.
+
+---
+
+### Étape 3 : Configurer le fichier de mots de passe pour l'authentification
+
+1. **Créer le fichier `sasl_passwd`** :
+
+   ```bash
+   sudo nano /etc/postfix/sasl_passwd
+   ```
+
+2. **Ajouter vos informations de connexion Gmail** :
+
+   Ajoutez la ligne suivante en remplaçant `your-email@gmail.com` par votre adresse Gmail et `yourpassword` par votre mot de passe ou votre **mot de passe d’application Gmail** (si vous avez activé l'authentification à deux facteurs) :
+
+   ```bash
+   [smtp.gmail.com]:587 your-email@gmail.com:yourpassword
+   ```
+
+   **Remarque** : Si vous avez activé l'authentification à deux facteurs pour votre compte Gmail, vous devez générer un **mot de passe d’application** dans votre compte Google, car le mot de passe habituel ne fonctionnera pas.
+
+3. **Protéger le fichier `sasl_passwd`** :
+
+   Une fois le fichier créé, vous devez sécuriser ce fichier en changeant ses permissions :
+
+   ```bash
+   sudo chmod 600 /etc/postfix/sasl_passwd
+   ```
+
+---
+
+### Étape 4 : Générer la table de mots de passe
+
+1. **Créer la table de mots de passe** :
+
+   Utilisez la commande suivante pour créer le fichier de hachage que Postfix utilisera pour l'authentification :
+
+   ```bash
+   sudo postmap /etc/postfix/sasl_passwd
+   ```
+
+2. **Vérifier la création du fichier `sasl_passwd.db`** :
+
+   Vérifiez que le fichier `sasl_passwd.db` a bien été créé :
+
+   ```bash
+   ls -l /etc/postfix/sasl_passwd*
+   ```
+
+---
+
+### Étape 5 : Configurer les règles de sécurité et recharger Postfix
+
+1. **Vérifier la configuration de Postfix** :
+
+   Vérifiez que tout est configuré correctement avec la commande suivante :
+
+   ```bash
+   sudo postfix check
+   ```
+
+2. **Redémarrer Postfix pour appliquer les changements** :
+
+   ```bash
+   sudo systemctl restart postfix
+   ```
+
+3. **Vérifier que Postfix fonctionne correctement** :
+
+   Vérifiez que le service Postfix fonctionne sans erreur :
+
+   ```bash
+   sudo systemctl status postfix
+   ```
+
+   Si tout fonctionne correctement, vous devriez voir un message indiquant que **Postfix est en cours d'exécution**.
+
+---
+
+### Étape 6 : Tester l'envoi d'e-mails
+
+1. **Envoyer un e-mail de test** :
+
+   Utilisez la commande `mail` pour envoyer un e-mail de test (si `mail` n'est pas installé, vous pouvez l'installer avec `sudo yum install mailx`).
+
+   ```bash
+   echo "Test message body" | mail -s "Test Subject" recipient@example.com
+   ```
+
+   Remplacez `recipient@example.com` par l'adresse e-mail du destinataire.
+
+2. **Vérifiez que l'e-mail a été envoyé avec succès**.
+
+---
+
+### Étape 7 : Résoudre les problèmes de connexion avec Gmail
+
+Si vous rencontrez des problèmes lors de l'envoi d'e-mails, il se peut que Gmail bloque la connexion en raison de paramètres de sécurité. Voici quelques solutions :
+
+1. **Vérifier les paramètres de sécurité de votre compte Google** :
+   - Assurez-vous que les connexions moins sécurisées sont activées si vous utilisez un mot de passe normal (non un mot de passe d'application).
+   - Si vous avez activé l'authentification à deux facteurs, assurez-vous d'utiliser un **mot de passe d'application** spécifique pour Postfix.
+
+2. **Vérifier les journaux de Postfix** :
+   - Si l'envoi échoue, consultez les journaux de Postfix pour plus de détails :
+
+   ```bash
+   sudo tail -f /var/log/maillog
+   ```
+
+---
+
+### Conclusion
+
+Vous avez maintenant configuré **Postfix** pour utiliser **Gmail** comme relais SMTP sur **Amazon Linux 2**. Vous pouvez envoyer des e-mails via votre serveur en utilisant Gmail comme serveur de relais.
+
+Si vous avez des questions ou rencontrez des problèmes, n'hésitez pas à demander ! 😊
